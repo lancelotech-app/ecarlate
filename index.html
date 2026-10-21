@@ -1,0 +1,1513 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ECARLATE — A local-first video workspace</title>
+  <meta name="description" content="ECARLATE is a local-first video workspace for people who watch, study, and review video. No accounts. No telemetry. Everything on your machine." />
+  <meta property="og:title" content="ECARLATE — A local-first video workspace" />
+  <meta property="og:description" content="Watch, study, and review video. Whisper transcripts, dialogue search, notes, markers, mini player. No cloud." />
+  <meta property="og:type" content="website" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%233d8bff'/><stop offset='1' stop-color='%237c5cff'/></linearGradient></defs><circle cx='50' cy='50' r='42' fill='url(%23g)'/></svg>" />
+  <style>
+    /* ============================================================
+       ECARLATE — Landing page
+       Single file, no dependencies
+       ============================================================ */
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg-0: #0a0b14;
+      --bg-1: #10121e;
+      --bg-2: #161a2b;
+      --bg-3: #1e2338;
+      --border: #232840;
+      --border-soft: #1a1e30;
+      --text: #e8eaf2;
+      --text-dim: #8a90a8;
+      --text-faint: #5a6078;
+      --violet: #7c5cff;
+      --violet-hi: #8f75ff;
+      --blue: #3d8bff;
+      --accent-grad: linear-gradient(135deg, #3d8bff 0%, #7c5cff 100%);
+      --accent-glow: 0 0 40px rgba(124, 92, 255, 0.35);
+      --success: #4ade80;
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg-0);
+      color: var(--text);
+      font-family: 'Inter', -apple-system, 'Segoe UI', Roboto, sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    img { max-width: 100%; display: block; }
+    button { font-family: inherit; cursor: pointer; border: none; background: none; }
+
+    ::selection { background: rgba(124, 92, 255, 0.4); color: white; }
+
+    ::-webkit-scrollbar { width: 10px; height: 10px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb {
+      background: var(--bg-3);
+      border-radius: 5px;
+      border: 2px solid var(--bg-0);
+    }
+    ::-webkit-scrollbar-thumb:hover { background: var(--bg-2); }
+
+    .container {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ==================== NAV ==================== */
+
+    .nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      height: 64px;
+      background: rgba(10, 11, 20, 0.75);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-soft);
+    }
+
+    .nav-inner {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      font-size: 14px;
+    }
+
+    .nav-brand-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--accent-grad);
+      box-shadow: var(--accent-glow);
+    }
+
+    .nav-brand-name {
+      background: var(--accent-grad);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      font-size: 13.5px;
+      color: var(--text-dim);
+    }
+
+    .nav-links a { transition: color 150ms ease; }
+    .nav-links a:hover { color: var(--text); }
+
+    .nav-cta {
+      padding: 8px 18px;
+      border-radius: var(--radius-sm);
+      background: var(--accent-grad);
+      color: white !important;
+      font-weight: 500;
+      font-size: 13px;
+      transition: filter 150ms ease, transform 150ms ease;
+    }
+    .nav-cta:hover { filter: brightness(1.12); }
+    .nav-cta:active { transform: scale(0.97); }
+
+    /* ==================== HERO ==================== */
+
+    .hero {
+      position: relative;
+      padding: 140px 0 80px;
+      text-align: center;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -200px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 900px;
+      height: 900px;
+      background: radial-gradient(circle, rgba(124, 92, 255, 0.15), transparent 65%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .hero::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      height: 100%;
+      background-image:
+        linear-gradient(rgba(124, 92, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(124, 92, 255, 0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(circle at center, black 0%, transparent 70%);
+      -webkit-mask-image: radial-gradient(circle at center, black 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .hero > * { position: relative; z-index: 1; }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      background: rgba(74, 222, 128, 0.1);
+      border: 1px solid rgba(74, 222, 128, 0.3);
+      color: var(--success);
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      margin-bottom: 28px;
+    }
+
+    .hero-badge-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--success);
+      animation: pulse-dot 2s infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.5); }
+      50% { opacity: 0.7; box-shadow: 0 0 0 6px rgba(74, 222, 128, 0); }
+    }
+
+    .hero h1 {
+      font-size: clamp(38px, 6vw, 64px);
+      font-weight: 700;
+      letter-spacing: -1.5px;
+      line-height: 1.1;
+      margin-bottom: 24px;
+    }
+
+    .hero h1 .gradient {
+      background: var(--accent-grad);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-sub {
+      font-size: clamp(16px, 2vw, 19px);
+      color: var(--text-dim);
+      max-width: 640px;
+      margin: 0 auto 40px;
+      line-height: 1.6;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 13px 26px;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 150ms ease;
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: var(--accent-grad);
+      color: white;
+      box-shadow: 0 8px 24px rgba(124, 92, 255, 0.3);
+    }
+    .btn-primary:hover {
+      filter: brightness(1.12);
+      box-shadow: 0 8px 32px rgba(124, 92, 255, 0.45);
+      transform: translateY(-1px);
+    }
+    .btn-primary:active { transform: translateY(0); }
+
+    .btn-ghost {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+    }
+    .btn-ghost:hover {
+      background: var(--bg-3);
+      color: var(--text);
+      border-color: var(--violet);
+    }
+
+    .hero-meta {
+      display: flex;
+      gap: 24px;
+      justify-content: center;
+      font-size: 12.5px;
+      color: var(--text-faint);
+      flex-wrap: wrap;
+    }
+
+    .hero-meta span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .hero-meta span::before {
+      content: '✓';
+      color: var(--success);
+      font-weight: bold;
+    }
+
+    /* ==================== HERO MOCKUP ==================== */
+
+    .hero-mockup {
+      margin-top: 72px;
+      position: relative;
+      perspective: 1200px;
+    }
+
+    .mockup-window {
+      background: var(--bg-1);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow:
+        0 40px 100px rgba(0, 0, 0, 0.6),
+        0 0 0 1px rgba(124, 92, 255, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.03);
+      overflow: hidden;
+      transform: rotateX(2deg);
+      transition: transform 400ms ease;
+    }
+
+    .mockup-window:hover { transform: rotateX(0deg); }
+
+    .mockup-titlebar {
+      height: 40px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 16px;
+      background: var(--bg-2);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .mockup-dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      background: var(--bg-3);
+    }
+    .mockup-dot:nth-child(1) { background: #ff5f57; }
+    .mockup-dot:nth-child(2) { background: #febc2e; }
+    .mockup-dot:nth-child(3) { background: #28c840; }
+
+    .mockup-title {
+      margin-left: auto;
+      font-size: 11px;
+      color: var(--text-faint);
+      letter-spacing: 2px;
+      font-weight: 600;
+    }
+
+    .mockup-body {
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      min-height: 420px;
+    }
+
+    .mockup-sidebar {
+      background: var(--bg-2);
+      border-right: 1px solid var(--border);
+      padding: 20px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      font-size: 12px;
+    }
+
+    .mockup-sidebar h4 {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.4px;
+      color: var(--text-faint);
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .mockup-sidebar ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .mockup-sidebar li {
+      padding: 6px 10px;
+      border-radius: 6px;
+      color: var(--text-dim);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .mockup-sidebar li.active {
+      background: var(--bg-3);
+      color: var(--text);
+      box-shadow: inset 2px 0 0 var(--violet);
+    }
+
+    .mockup-count {
+      font-size: 10px;
+      background: var(--bg-3);
+      color: var(--text-faint);
+      padding: 1px 6px;
+      border-radius: 8px;
+    }
+
+    .mockup-main {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      overflow: hidden;
+    }
+
+    .mockup-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: var(--text-faint);
+    }
+
+    .mockup-pill {
+      padding: 5px 12px;
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 11px;
+    }
+
+    .mockup-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .mockup-card {
+      background: var(--bg-2);
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border-soft);
+      position: relative;
+    }
+
+    .mockup-thumb {
+      aspect-ratio: 16 / 9;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .mockup-thumb-1 { background: linear-gradient(135deg, #1e3a5f 0%, #3d1f5f 100%); }
+    .mockup-thumb-2 { background: linear-gradient(135deg, #5f1e3a 0%, #3d1f5f 100%); }
+    .mockup-thumb-3 { background: linear-gradient(135deg, #1e5f3a 0%, #1e3a5f 100%); }
+    .mockup-thumb-4 { background: linear-gradient(135deg, #5f4d1e 0%, #5f1e3a 100%); }
+    .mockup-thumb-5 { background: linear-gradient(135deg, #1e1f5f 0%, #1e5f5f 100%); }
+    .mockup-thumb-6 { background: linear-gradient(135deg, #3a1e5f 0%, #5f1e1e 100%); }
+
+    .mockup-thumb::after {
+      content: '▶';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 22px;
+      color: rgba(255, 255, 255, 0.5);
+      transition: color 200ms ease;
+    }
+
+    .mockup-card:hover .mockup-thumb::after { color: white; }
+
+    .mockup-badge {
+      position: absolute;
+      bottom: 6px;
+      right: 6px;
+      background: rgba(0, 0, 0, 0.75);
+      color: white;
+      font-size: 9px;
+      padding: 2px 5px;
+      border-radius: 3px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .mockup-progress {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 2px;
+      background: rgba(0, 0, 0, 0.5);
+    }
+
+    .mockup-progress > div {
+      height: 100%;
+      background: var(--accent-grad);
+    }
+
+    .mockup-info {
+      padding: 7px 9px;
+      font-size: 10px;
+      color: var(--text-dim);
+    }
+
+    .mockup-info strong {
+      display: block;
+      font-size: 10.5px;
+      color: var(--text);
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      margin-bottom: 2px;
+    }
+
+    /* ==================== SECTIONS ==================== */
+
+    section {
+      padding: 100px 0;
+      position: relative;
+    }
+
+    .section-label {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--violet);
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-size: clamp(28px, 4vw, 42px);
+      font-weight: 700;
+      letter-spacing: -0.8px;
+      line-height: 1.2;
+      margin-bottom: 16px;
+    }
+
+    .section-sub {
+      font-size: 16px;
+      color: var(--text-dim);
+      max-width: 640px;
+      margin-bottom: 56px;
+    }
+
+    /* ==================== FEATURES ==================== */
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .feature-card {
+      background: var(--bg-1);
+      border: 1px solid var(--border-soft);
+      border-radius: var(--radius);
+      padding: 28px;
+      transition: all 200ms ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: var(--accent-grad);
+      opacity: 0;
+      transition: opacity 200ms ease;
+    }
+
+    .feature-card:hover {
+      border-color: var(--violet);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    .feature-card:hover::before { opacity: 1; }
+
+    .feature-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background: rgba(124, 92, 255, 0.12);
+      border: 1px solid rgba(124, 92, 255, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      margin-bottom: 18px;
+    }
+
+    .feature-card h3 {
+      font-size: 17px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      letter-spacing: -0.2px;
+    }
+
+    .feature-card p {
+      font-size: 14px;
+      color: var(--text-dim);
+      line-height: 1.55;
+    }
+
+    /* ==================== SHOWCASE ==================== */
+
+    .showcase {
+      background: linear-gradient(180deg, var(--bg-0) 0%, var(--bg-1) 50%, var(--bg-0) 100%);
+    }
+
+    .showcase-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+      padding: 40px 0;
+    }
+
+    .showcase-row:nth-child(even) {
+      direction: rtl;
+    }
+    .showcase-row:nth-child(even) > * {
+      direction: ltr;
+    }
+
+    .showcase-text h3 {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 16px;
+    }
+
+    .showcase-text p {
+      font-size: 15px;
+      color: var(--text-dim);
+      margin-bottom: 16px;
+      line-height: 1.65;
+    }
+
+    .showcase-text ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .showcase-text li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 14px;
+      color: var(--text-dim);
+    }
+
+    .showcase-text li::before {
+      content: '▸';
+      color: var(--violet);
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+
+    .showcase-visual {
+      background: var(--bg-1);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+      min-height: 320px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      justify-content: center;
+    }
+
+    /* Subtitle preview */
+    .preview-subs {
+      aspect-ratio: 16 / 9;
+      background: linear-gradient(135deg, #1e3a5f 0%, #3d1f5f 100%);
+      border-radius: 8px;
+      position: relative;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding-bottom: 20px;
+      overflow: hidden;
+    }
+
+    .preview-subs::before {
+      content: '▶';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 40px;
+      color: rgba(255, 255, 255, 0.15);
+    }
+
+    .preview-sub-text {
+      background: rgba(0, 0, 0, 0.75);
+      padding: 5px 14px;
+      border-radius: 5px;
+      color: white;
+      font-size: 13px;
+      font-weight: 500;
+      max-width: 80%;
+      text-align: center;
+    }
+
+    /* Transcript preview */
+    .preview-transcript {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 12px;
+    }
+
+    .preview-seg {
+      display: flex;
+      gap: 10px;
+      padding: 6px 10px;
+      border-radius: 5px;
+      color: var(--text-dim);
+    }
+
+    .preview-seg.active {
+      background: var(--bg-3);
+      color: var(--text);
+      box-shadow: inset 2px 0 0 var(--violet);
+    }
+
+    .preview-time {
+      color: var(--violet);
+      font-variant-numeric: tabular-nums;
+      font-weight: 500;
+      flex-shrink: 0;
+    }
+
+    /* Marker preview */
+    .preview-marker {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      background: var(--bg-2);
+      border-left: 3px solid var(--violet);
+      border-radius: 6px;
+      font-size: 13px;
+    }
+
+    .preview-marker-time {
+      color: var(--violet);
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      font-size: 12px;
+    }
+
+    /* ==================== PRIVACY ==================== */
+
+    .privacy {
+      background: var(--bg-1);
+      border-top: 1px solid var(--border-soft);
+      border-bottom: 1px solid var(--border-soft);
+    }
+
+    .privacy-inner {
+      text-align: center;
+      max-width: 780px;
+      margin: 0 auto;
+    }
+
+    .privacy-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 32px;
+      margin-top: 48px;
+    }
+
+    .privacy-item {
+      text-align: center;
+    }
+
+    .privacy-item .check {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: rgba(74, 222, 128, 0.12);
+      border: 1px solid rgba(74, 222, 128, 0.3);
+      color: var(--success);
+      font-size: 22px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 14px;
+    }
+
+    .privacy-item h4 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .privacy-item p {
+      font-size: 13px;
+      color: var(--text-dim);
+    }
+
+    /* ==================== DOWNLOAD ==================== */
+
+    .download {
+      text-align: center;
+    }
+
+    .download-card {
+      background: var(--bg-1);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 56px 40px;
+      max-width: 720px;
+      margin: 0 auto;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .download-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top, rgba(124, 92, 255, 0.08), transparent 60%);
+      pointer-events: none;
+    }
+
+    .download-card > * { position: relative; }
+
+    .download-card h2 {
+      font-size: 34px;
+      font-weight: 700;
+      letter-spacing: -0.8px;
+      margin-bottom: 12px;
+    }
+
+    .download-card p {
+      color: var(--text-dim);
+      font-size: 15px;
+      margin-bottom: 32px;
+    }
+
+    .download-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 28px;
+    }
+
+    .download-info {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      font-size: 12px;
+      color: var(--text-faint);
+      flex-wrap: wrap;
+    }
+
+    /* ==================== FAQ ==================== */
+
+    .faq-list {
+      max-width: 780px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .faq-item {
+      background: var(--bg-1);
+      border: 1px solid var(--border-soft);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      transition: border-color 200ms ease;
+    }
+
+    .faq-item:hover { border-color: var(--border); }
+
+    .faq-item summary {
+      padding: 18px 22px;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 15px;
+      list-style: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      color: var(--text);
+    }
+
+    .faq-item summary::-webkit-details-marker { display: none; }
+
+    .faq-item summary::after {
+      content: '+';
+      font-size: 20px;
+      color: var(--text-dim);
+      font-weight: 300;
+      transition: transform 200ms ease;
+      flex-shrink: 0;
+    }
+
+    .faq-item[open] summary::after {
+      transform: rotate(45deg);
+      color: var(--violet);
+    }
+
+    .faq-item[open] summary { color: var(--violet-hi); }
+
+    .faq-answer {
+      padding: 0 22px 20px;
+      font-size: 14px;
+      color: var(--text-dim);
+      line-height: 1.65;
+    }
+
+    /* ==================== FOOTER ==================== */
+
+    footer {
+      border-top: 1px solid var(--border-soft);
+      padding: 48px 0 32px;
+      background: var(--bg-1);
+    }
+
+    .footer-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 32px;
+      flex-wrap: wrap;
+      margin-bottom: 32px;
+    }
+
+    .footer-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      font-size: 14px;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 24px;
+      font-size: 13px;
+      color: var(--text-dim);
+      flex-wrap: wrap;
+    }
+
+    .footer-links a:hover { color: var(--text); }
+
+    .footer-bottom {
+      padding-top: 24px;
+      border-top: 1px solid var(--border-soft);
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-faint);
+      line-height: 1.7;
+    }
+
+    .footer-bottom .made-with {
+      color: var(--text-dim);
+    }
+
+    .footer-bottom .heart {
+      color: #ff5c9d;
+    }
+
+    /* ==================== RESPONSIVE ==================== */
+
+    @media (max-width: 900px) {
+      .nav-links { gap: 16px; font-size: 12.5px; }
+      .nav-links a:not(.nav-cta) { display: none; }
+
+      .mockup-body { grid-template-columns: 1fr; min-height: auto; }
+      .mockup-sidebar { display: none; }
+      .mockup-grid { grid-template-columns: repeat(2, 1fr); }
+
+      .showcase-row {
+        grid-template-columns: 1fr;
+        gap: 32px;
+      }
+      .showcase-row:nth-child(even) { direction: ltr; }
+
+      section { padding: 72px 0; }
+      .hero { padding: 110px 0 60px; }
+      .hero-mockup { margin-top: 48px; }
+      .mockup-window { transform: none; }
+    }
+
+    @media (max-width: 600px) {
+      .hero-actions { flex-direction: column; align-items: stretch; }
+      .btn { justify-content: center; }
+      .download-card { padding: 40px 24px; }
+      .download-actions { flex-direction: column; }
+      .footer-inner { flex-direction: column; text-align: center; }
+    }
+
+    /* ==================== ANIMATIONS ==================== */
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .animate {
+      animation: fadeInUp 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .animate-delay-1 { animation-delay: 100ms; }
+    .animate-delay-2 { animation-delay: 200ms; }
+    .animate-delay-3 { animation-delay: 300ms; }
+    .animate-delay-4 { animation-delay: 400ms; }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==================== NAV ==================== -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="#" class="nav-brand">
+        <span class="nav-brand-dot"></span>
+        <span class="nav-brand-name">ECARLATE</span>
+      </a>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#showcase">Showcase</a>
+        <a href="#faq">FAQ</a>
+        <a href="https://github.com/your-user/ecarlate" target="_blank" rel="noopener">GitHub</a>
+        <a href="#download" class="nav-cta">Download</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ==================== HERO ==================== -->
+  <header class="hero">
+    <div class="container">
+      <div class="hero-badge animate">
+        <span class="hero-badge-dot"></span>
+        <span>v1.0.0 — now available</span>
+      </div>
+
+      <h1 class="animate animate-delay-1">
+        Video deserves<br />
+        a <span class="gradient">workspace</span>,<br />
+        not just a player.
+      </h1>
+
+      <p class="hero-sub animate animate-delay-2">
+        ECARLATE is a local-first video workspace for people who watch, study, and review video.
+        Library. Queue. Subtitles. Whisper transcripts. Dialogue search. Notes. Markers. All on your machine.
+      </p>
+
+      <div class="hero-actions animate animate-delay-3">
+        <a href="#download" class="btn btn-primary">
+          <span>⬇</span>
+          <span>Download for Windows</span>
+        </a>
+        <a href="https://github.com/your-user/ecarlate" target="_blank" rel="noopener" class="btn btn-ghost">
+          <span>⭐</span>
+          <span>View on GitHub</span>
+        </a>
+      </div>
+
+      <div class="hero-meta animate animate-delay-4">
+        <span>Free &amp; open source</span>
+        <span>No accounts</span>
+        <span>No telemetry</span>
+        <span>Works offline</span>
+      </div>
+
+      <!-- Mockup -->
+      <div class="hero-mockup animate animate-delay-4">
+        <div class="mockup-window">
+          <div class="mockup-titlebar">
+            <span class="mockup-dot"></span>
+            <span class="mockup-dot"></span>
+            <span class="mockup-dot"></span>
+            <span class="mockup-title">ECARLATE</span>
+          </div>
+          <div class="mockup-body">
+            <aside class="mockup-sidebar">
+              <div>
+                <h4>Library</h4>
+                <ul>
+                  <li class="active">All videos <span class="mockup-count">24</span></li>
+                  <li>Recently played</li>
+                  <li>In progress</li>
+                  <li>Favorites</li>
+                </ul>
+              </div>
+              <div>
+                <h4>Queue</h4>
+                <ul>
+                  <li>01 · Lecture 04</li>
+                  <li>02 · Documentary</li>
+                  <li>03 · Interview</li>
+                </ul>
+              </div>
+            </aside>
+            <div class="mockup-main">
+              <div class="mockup-toolbar">
+                <span>24 videos</span>
+                <span class="mockup-pill">Sort: Recent</span>
+              </div>
+              <div class="mockup-grid">
+                <div class="mockup-card">
+                  <div class="mockup-thumb mockup-thumb-1">
+                    <span class="mockup-badge">24:15</span>
+                    <div class="mockup-progress"><div style="width:62%"></div></div>
+                  </div>
+                  <div class="mockup-info"><strong>Lecture 04 — ML Basics</strong>142 MB</div>
+                </div>
+                <div class="mockup-card">
+                  <div class="mockup-thumb mockup-thumb-2">
+                    <span class="mockup-badge">1:42:08</span>
+                  </div>
+                  <div class="mockup-info"><strong>Documentary Film</strong>2.1 GB</div>
+                </div>
+                <div class="mockup-card">
+                  <div class="mockup-thumb mockup-thumb-3">
+                    <span class="mockup-badge">08:32</span>
+                    <div class="mockup-progress"><div style="width:100%"></div></div>
+                  </div>
+                  <div class="mockup-info"><strong>Interview — Sarah</strong>78 MB</div>
+                </div>
+                <div class="mockup-card">
+                  <div class="mockup-thumb mockup-thumb-4">
+                    <span class="mockup-badge">15:20</span>
+                  </div>
+                  <div class="mockup-info"><strong>Tutorial — Color Grading</strong>210 MB</div>
+                </div>
+                <div class="mockup-card">
+                  <div class="mockup-thumb mockup-thumb-5">
+                    <span class="mockup-badge">45:00</span>
+                    <div class="mockup-progress"><div style="width:28%"></div></div>
+                  </div>
+                  <div class="mockup-info"><strong>Conference Talk</strong>890 MB</div>
+                </div>
+                <div class="mockup-card">
+                  <div class="mockup-thumb mockup-thumb-6">
+                    <span class="mockup-badge">3:11</span>
+                  </div>
+                  <div class="mockup-info"><strong>Short Clip</strong>24 MB</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== FEATURES ==================== -->
+  <section id="features">
+    <div class="container">
+      <div class="section-label">Features</div>
+      <h2 class="section-title">Everything video needs, in one place.</h2>
+      <p class="section-sub">
+        No plugin ecosystem. No account. No cloud sync. Just a focused set of tools
+        that make video usable for actual work.
+      </p>
+
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">📚</div>
+          <h3>A real library</h3>
+          <p>Real thumbnails, duration, resolution. Filters, favorites, collections. Search by name — or by dialogue.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🎬</div>
+          <h3>A keyboard-first player</h3>
+          <p>Every control bound to a shortcut you can rebind. Hover thumbnails on the timeline. Chapters, scenes, markers.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">💬</div>
+          <h3>Subtitles that work</h3>
+          <p>SRT, VTT, ASS, SSA. Auto-found next to your video. Adjust size, color, offset, position — in real time.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🗣️</div>
+          <h3>Local Whisper transcripts</h3>
+          <p>Transcribe any video with Whisper — fully offline. 4 model sizes, 60+ languages. No API key.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🔍</div>
+          <h3>Search inside dialogue</h3>
+          <p>Find that one line across your entire library. Click a hit, jump straight to the exact second.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">📝</div>
+          <h3>Study with notes</h3>
+          <p>Timestamped notes per video. Every note remembers when you wrote it. Click to seek back.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🔬</div>
+          <h3>Review frame by frame</h3>
+          <p>Step at 1/30s. Add a marker at the exact frame. Perfect for analysis, teaching, editing reference.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🎵</div>
+          <h3>A persistent queue</h3>
+          <p>Shuffle, repeat, drag-to-reorder. Survives restarts. "Play all" from any filtered view.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🪟</div>
+          <h3>Mini player</h3>
+          <p>Compact always-on-top window. Full controls. Drag it anywhere. F9 toggles it instantly.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SHOWCASE ==================== -->
+  <section id="showcase" class="showcase">
+    <div class="container">
+      <div class="section-label">Showcase</div>
+      <h2 class="section-title">Built for the way you actually watch.</h2>
+      <p class="section-sub">
+        Four workflows, one app. Whether you're learning, reviewing, writing, or just watching.
+      </p>
+
+      <!-- Row 1: Subtitles -->
+      <div class="showcase-row">
+        <div class="showcase-text">
+          <h3>Subtitles that respect your eyes</h3>
+          <p>
+            Change font size, color, position, offset, background — instantly, while the video plays.
+            ECARLATE remembers your preferences per video. Auto-finds subtitle files sitting next to your video.
+          </p>
+          <ul>
+            <li>SRT, VTT, ASS, SSA support</li>
+            <li>Live offset adjustment (±1s, ±0.1s)</li>
+            <li>Per-video styling, persistent</li>
+            <li>Automatic discovery next to video files</li>
+          </ul>
+        </div>
+        <div class="showcase-visual">
+          <div class="preview-subs">
+            <div class="preview-sub-text">"But here's the thing about memory — it's not a recording. It's a reconstruction."</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 2: Transcript -->
+      <div class="showcase-row">
+        <div class="showcase-text">
+          <h3>Transcripts, searchable across your library</h3>
+          <p>
+            Transcribe with Whisper locally — no cloud, no API keys, no per-minute cost.
+            Every segment is clickable. Every transcript is searchable across every video you own.
+          </p>
+          <ul>
+            <li>4 Whisper model sizes (Tiny to Medium)</li>
+            <li>60+ languages, auto-detected</li>
+            <li>Segments seek on click, auto-highlight</li>
+            <li>Full-text search across all transcripts</li>
+          </ul>
+        </div>
+        <div class="showcase-visual">
+          <div class="preview-transcript">
+            <div class="preview-seg">
+              <span class="preview-time">00:42</span>
+              <span>But here's the thing about memory.</span>
+            </div>
+            <div class="preview-seg">
+              <span class="preview-time">00:47</span>
+              <span>It's not a recording —</span>
+            </div>
+            <div class="preview-seg active">
+              <span class="preview-time">00:51</span>
+              <span>it's a reconstruction.</span>
+            </div>
+            <div class="preview-seg">
+              <span class="preview-time">00:55</span>
+              <span>Every time you remember, you rebuild.</span>
+            </div>
+            <div class="preview-seg">
+              <span class="preview-time">01:02</span>
+              <span>And the rebuild is never the same.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 3: Markers -->
+      <div class="showcase-row">
+        <div class="showcase-text">
+          <h3>Markers, notes, and frame stepping</h3>
+          <p>
+            Pause at the exact frame that matters. Add a marker with a label.
+            Write a note that remembers the timestamp. Come back next week — it's all still there.
+          </p>
+          <ul>
+            <li>Frame-by-frame stepping (1/30s)</li>
+            <li>Notes timestamped to the millisecond</li>
+            <li>Markers visible on the timeline</li>
+            <li>Colored markers, chapter overlays</li>
+          </ul>
+        </div>
+        <div class="showcase-visual">
+          <div class="preview-marker">
+            <span class="preview-marker-time">01:23.4</span>
+            <span>Cut point — hold on this frame</span>
+          </div>
+          <div class="preview-marker">
+            <span class="preview-marker-time">04:12.0</span>
+            <span>Key insight: reconstruction vs recording</span>
+          </div>
+          <div class="preview-marker">
+            <span class="preview-marker-time">07:48.9</span>
+            <span>B-roll candidate — transition shot</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== PRIVACY ==================== -->
+  <section class="privacy">
+    <div class="container">
+      <div class="privacy-inner">
+        <div class="section-label">Privacy</div>
+        <h2 class="section-title">Your videos never leave your machine.</h2>
+        <p class="section-sub" style="margin: 0 auto;">
+          ECARLATE is local-first by design. No analytics, no crash reports, no telemetry.
+          Whisper runs entirely on your CPU. Everything is stored in a single SQLite file you own.
+        </p>
+
+        <div class="privacy-grid">
+          <div class="privacy-item">
+            <div class="check">✓</div>
+            <h4>No accounts</h4>
+            <p>No login, no sync, no signup.</p>
+          </div>
+          <div class="privacy-item">
+            <div class="check">✓</div>
+            <h4>No telemetry</h4>
+            <p>Zero calls home. Verify in the source.</p>
+          </div>
+          <div class="privacy-item">
+            <div class="check">✓</div>
+            <h4>Works offline</h4>
+            <p>Full functionality without internet.</p>
+          </div>
+          <div class="privacy-item">
+            <div class="check">✓</div>
+            <h4>Open source</h4>
+            <p>Audit the code. Fork it. Own it.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== DOWNLOAD ==================== -->
+  <section id="download" class="download">
+    <div class="container">
+      <div class="download-card">
+        <h2>Try ECARLATE for Windows</h2>
+        <p>Free, open source, no strings attached. Installs in under a minute.</p>
+
+        <div class="download-actions">
+          <a href="https://github.com/your-user/ecarlate/releases/download/v1.0.0/ECARLATE_1.0.0_x64-setup.exe"
+             class="btn btn-primary">
+            <span>⬇</span>
+            <span>Download installer (.exe)</span>
+          </a>
+          <a href="https://github.com/your-user/ecarlate/releases/download/v1.0.0/ECARLATE_1.0.0_x64_en-US.msi"
+             class="btn btn-ghost">
+            <span>⬇</span>
+            <span>Download MSI</span>
+          </a>
+        </div>
+
+        <div class="download-info">
+          <span>Windows 10 / 11 · x64</span>
+          <span>v1.0.0</span>
+          <span>Bundled ffmpeg</span>
+          <span>~50 MB</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== FAQ ==================== -->
+  <section id="faq">
+    <div class="container">
+      <div style="text-align: center;">
+        <div class="section-label">FAQ</div>
+        <h2 class="section-title">Questions, answered.</h2>
+      </div>
+
+      <div class="faq-list" style="margin-top: 48px;">
+        <details class="faq-item">
+          <summary>Is ECARLATE really free?</summary>
+          <div class="faq-answer">
+            Yes. Completely free and open source. No paid tiers, no feature locks, no watermarks.
+            If you find it useful, you can donate to the developer from the About section — but it's never required.
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>Does it send my videos anywhere?</summary>
+          <div class="faq-answer">
+            No. Everything — video decoding, transcription, search, thumbnails — runs locally.
+            ECARLATE makes zero outbound network calls except when you explicitly download a Whisper model.
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>What video formats are supported?</summary>
+          <div class="faq-answer">
+            MP4, WebM, MKV, AVI, MOV, FLV, WMV, M4V, OGV, MPG, MPEG, TS, M2TS.
+            Formats that the WebView can't play natively are transcoded on the fly using bundled ffmpeg —
+            with no visible delay once the first frame decodes.
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>Do I need to install ffmpeg separately?</summary>
+          <div class="faq-answer">
+            No. ffmpeg and ffprobe are bundled inside the installer. Everything works out of the box.
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>How does Whisper transcription work offline?</summary>
+          <div class="faq-answer">
+            ECARLATE uses whisper.cpp compiled directly into the app. When you click Transcribe for the first time,
+            it downloads the model you picked (from 75 MB for Tiny to 1.5 GB for Medium). After that, all transcription
+            happens on your CPU, no internet required. Models are stored in your app data folder.
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>Will it run on macOS or Linux?</summary>
+          <div class="faq-answer">
+            Not yet — 1.0.0 is Windows-only. macOS and Linux builds are on the roadmap for a future 1.x release.
+            The codebase is already cross-platform (Tauri + Rust); only the installer and platform-specific
+            integrations (like SMTC) are Windows-focused in this release.
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>Where is my data stored?</summary>
+          <div class="faq-answer">
+            On Windows: <code>%APPDATA%\com.ecarlate.app\</code>. You'll find a single SQLite database
+            (<code>ecarlate.db</code>), the downloaded Whisper models, and a thumbnail cache folder.
+            Everything is yours. Back it up, move it, delete it — no server involved.
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>Can I contribute?</summary>
+          <div class="faq-answer">
+            Absolutely. The GitHub repository is public — open issues for bugs, submit pull requests,
+            or fork it for your own needs. MIT license, so you can do whatever you want with it.
+          </div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== FOOTER ==================== -->
+  <footer>
+    <div class="container">
+      <div class="footer-inner">
+        <a href="#" class="footer-brand">
+          <span class="nav-brand-dot"></span>
+          <span class="nav-brand-name">ECARLATE</span>
+        </a>
+        <div class="footer-links">
+          <a href="https://github.com/your-user/ecarlate" target="_blank" rel="noopener">GitHub</a>
+          <a href="https://github.com/your-user/ecarlate/issues" target="_blank" rel="noopener">Issues</a>
+          <a href="https://github.com/your-user/ecarlate/blob/main/LICENSE" target="_blank" rel="noopener">License</a>
+          <a href="#download">Download</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <div>ECARLATE v1.0.0 — Video workspace for people who actually watch video.</div>
+        <div class="made-with" style="margin-top: 8px;">
+          Built with <span class="heart">♥</span> using Tauri, Rust, and too much coffee.
+        </div>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
